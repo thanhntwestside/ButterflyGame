@@ -45,7 +45,7 @@ document.addEventListener('touchstart', function(e) {
     const tapLength = currentTime - lastTapTime;
 
     // Nếu khoảng cách giữa 2 lần chạm nhỏ hơn 1000ms (1 giây) và chưa game over
-    if (tapLength < 1000 && tapLength > 0 && !gameOver) {
+    if (tapLength < 200 && tapLength > 0 && !gameOver) {
         togglePause();
         e.preventDefault(); // Chặn việc tạo thêm joystick khi double tap
     }
