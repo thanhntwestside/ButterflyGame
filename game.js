@@ -103,7 +103,7 @@ function update() {
 
 function ketThucGame() {
     gameOver = true;
-    alert("GAME OVER! Bạn đã đâm vào cây.");
+    alert("GAME OVER! Bạn thua rồi");
     location.reload(); // Tải lại trang để chơi lại
 }
 
