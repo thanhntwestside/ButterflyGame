@@ -4,6 +4,9 @@ body {
     overflow: hidden; /* Ẩn thanh cuộn */
     background-color: #333;
     touch-action: none; /* Tắt các cử chỉ mặc định của trình duyệt */
+    -ms-touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 #gameCanvas {
