@@ -7,6 +7,46 @@ body {
     -ms-touch-action: none;
     user-select: none;
     -webkit-user-select: none;
+    font-family: Arial, sans-serif;
+}
+/* THÊM MỚI TỪ ĐÂY */
+.hidden {
+    display: none !important;
+}
+
+#pauseScreen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.8); /* Nền đen mờ */
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    z-index: 100; /* Luôn nổi lên trên cùng */
+    width: 80%; /* Rộng 80% màn hình điện thoại */
+    max-width: 300px;
+}
+
+#pauseScreen h2 {
+    margin-top: 0;
+    color: #FFD700; /* Màu vàng */
+}
+
+#btnResume {
+    background-color: #4CAF50; /* Màu xanh lá */
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    font-size: 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 10px 0;
+}
+
+#btnResume:active {
+    background-color: #45a049; /* Đổi màu khi bấm */
 }
 
 #gameCanvas {
