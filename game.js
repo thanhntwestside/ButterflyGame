@@ -1,35 +1,37 @@
-// 1. THIẾT LẬP MÀN HÌNH & CHẶN LỖI CẢM ỨNG
+// 1. THIẾT LẬP MÀN HÌNH
 const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const pauseScreen = document.getElementById('pauseScreen');
-const btnResume = document.getElementById('btnResume');
+const ctx = canvas.getContext('2d'); // Công cụ bút vẽ
 
-// Chặn hành vi mặc định
-document.body.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
-
+// Đặt kích thước game bằng đúng màn hình điện thoại
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// 2. TẢI HÌNH ẢNH
+// Chặn hành động kéo màn hình trên điện thoại
+document.addEventListener('touchmove', function(e) { 
+    e.preventDefault(); 
+}, { passive: false });
+
+// 2. TẢI HÌNH ẢNH (Thay thế hình vuông bằng hình thật)
 const imgBuom = new Image(); imgBuom.src = 'assets/buom.png';
 const imgCay = new Image(); imgCay.src = 'assets/cay.png';
-const imgNen = new Image(); imgNen.src = 'assets/rung.png';
+const imgNen = new Image(); imgNen.src = 'assets/nen.png';
 
-// 3. CẤU HÌNH THÔNG SỐ
+// CẤU HÌNH THÔNG SỐ
 const SPEED_BUOM_PER_SEC = canvas.width * 0.6; 
-const SPEED_CAY_PER_SEC = canvas.height * 0.4; 
+const SPEED_CAY_PER_SEC = canvas.height * 0.4;
 
+// 3. KHAI BÁO CÁC BIẾN (Dữ liệu game)
 let buom = { 
-    x: canvas.width / 2, 
-    y: canvas.height - 150, 
-    banKinh: 20 
+    x: canvas.width / 2, // Vị trí ngang
+    y: canvas.height - 150, // Vị trí dọc
+    banKinh: 20 // Độ to của bướm (để tính va chạm)
 };
 
-let danhSachCay = [];
-let joystickData = { x: 0, y: 0 }; 
+let danhSachCay = []; // Danh sách các cây đang rơi
+let joystickData = { x: 0, y: 0 }; // Lưu hướng điều khiển
 let gameOver = false;
 let isPaused = false; // Trạng thái tạm dừng
-let lastTime = 0; 
+let lastTime = 0;
 
 // --- LOGIC NHẤN ĐÚP (DOUBLE TAP) ---
 let lastTapTime = 0;
@@ -74,30 +76,33 @@ function resumeGame() {
 btnResume.addEventListener('click', resumeGame);
 btnResume.addEventListener('touchstart', resumeGame); // Hỗ trợ cảm ứng tốt hơn
 
-// 4. CẤU HÌNH JOYSTICK
+// 4. CẤU HÌNH JOYSTICK (Dùng thư viện Nipple.js)
 var manager = nipplejs.create({
     zone: document.getElementById('zone_joystick'),
-    mode: 'dynamic',
+    mode: 'dynamic', // Loại joystick xuất hiện chỗ ngón tay chạm
     color: 'white',
     size: 150,
     threshold: 0.1
 });
 
+// Lắng nghe khi người chơi kéo joystick
 manager.on('move', function (evt, data) {
+    // data.vector chứa hướng x và y (từ -1 đến 1)
     if (!isPaused) { // Chỉ nhận điều khiển khi không pause
-        joystickData.x = data.vector.x;
-        joystickData.y = data.vector.y;
+    joystickData.x = data.vector.x;
+    joystickData.y = data.vector.y;
     }
 });
 
+// Khi thả tay ra, bướm dừng lại
 manager.on('end', function () {
     joystickData.x = 0;
     joystickData.y = 0;
 });
 
-// 5. VÒNG LẶP GAME
+// 5. HÀM CHÍNH (Vòng lặp game - Chạy liên tục 60 lần/giây)
 function update(timestamp) {
-    if (gameOver) return;
+    if (gameOver) return; // Nếu thua thì dừng lại
 
     // NẾU ĐANG TẠM DỪNG -> KHÔNG LÀM GÌ CẢ, CHỜ TIẾP
     if (isPaused) {
@@ -105,7 +110,6 @@ function update(timestamp) {
         // Hoặc chỉ đơn giản là return không gọi lại, nhưng logic nút Resume sẽ gọi lại
         return; 
     }
-
     if (!lastTime) lastTime = timestamp;
     const deltaTime = (timestamp - lastTime) / 1000; 
     lastTime = timestamp;
@@ -115,8 +119,9 @@ function update(timestamp) {
         return;
     }
 
+    // Xóa màn hình cũ để vẽ hình mới
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+
     if (imgNen.complete) {
         ctx.drawImage(imgNen, 0, 0, canvas.width, canvas.height);
     } else {
@@ -124,8 +129,13 @@ function update(timestamp) {
     }
 
     // -- XỬ LÝ BƯỚM --
+    // Cập nhật vị trí bướm theo joystick
     buom.x += SPEED_BUOM_PER_SEC * joystickData.x * deltaTime;
     buom.y -= SPEED_BUOM_PER_SEC * joystickData.y * deltaTime;
+
+    // Giới hạn không cho bướm bay ra khỏi màn hình
+    if(buom.x < 0) buom.x = 0;
+    if(buom.x > canvas.width) buom.x = canvas.width;
 
     if(buom.x < 0) buom.x = 0;
     if(buom.x > canvas.width) buom.x = canvas.width;
@@ -166,7 +176,7 @@ function update(timestamp) {
 function ketThucGame() {
     gameOver = true;
     setTimeout(() => {
-        alert("Thua rồi! Bấm OK để chơi lại.");
+        alert("Thua rồi! Lêu lêu >.<");
         location.reload();
     }, 100);
 }
