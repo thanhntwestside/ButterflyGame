@@ -6,6 +6,10 @@ const ctx = canvas.getContext('2d'); // Công cụ bút vẽ
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+document.addEventListener('touchmove', function(e) { 
+    e.preventDefault(); 
+}, { passive: false });
+
 // 2. TẢI HÌNH ẢNH (Thay thế hình vuông bằng hình thật)
 const imgBuom = new Image(); imgBuom.src = 'assets/buom.png';
 const imgCay = new Image(); imgCay.src = 'assets/cay.png';
