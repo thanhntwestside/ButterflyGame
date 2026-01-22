@@ -230,7 +230,7 @@ function update(timestamp) {
 function ketThucGame() {
     gameOver = true;
     setTimeout(() => {
-        alert("Rầm! Bạn đã đâm vào cây.");
+        alert("Ha Ha, thua rồi bồ tèo!");
         location.reload();
     }, 100);
 }
