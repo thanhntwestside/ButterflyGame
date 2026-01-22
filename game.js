@@ -59,7 +59,7 @@ document.addEventListener('touchstart', function(e) {
     if (e.target === btnResume) return;
     const currentTime = new Date().getTime();
     const tapLength = currentTime - lastTapTime;
-    if (tapLength < 1000 && tapLength > 0 && !gameOver) {
+    if (tapLength < 200 && tapLength > 0 && !gameOver) {
         togglePause();
         e.preventDefault();
     }
