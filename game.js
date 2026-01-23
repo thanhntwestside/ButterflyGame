@@ -15,21 +15,18 @@ const imgBuom = new Image(); imgBuom.src = 'assets/buom.png';
 const imgCay = new Image(); imgCay.src = 'assets/cay.png';
 const imgNen = new Image(); imgNen.src = 'assets/nen.png';
 
-const nguonTrangTri = [
-    'assets/co 1.png', 
-    'assets/co 2.png',
-    'assets/tho.png', 
-    'assets/co 3.png', 
-    'assets/ho.png', 
-    'assets/voi.png'
-];
+// --- KHO 1: CỎ (Xuất hiện nhiều) ---
+const nguonCo = ['assets/co 1.png', 'assets/co 2.png', 'assets/co 3.png'];
+let khoAnhCo = [];
+nguonCo.forEach(src => {
+    let img = new Image(); img.src = src; khoAnhCo.push(img);
+});
 
-// Biến này sẽ chứa các tấm ảnh đã tải xong để dùng
-let khoAnhTrangTri = []; 
-nguonTrangTri.forEach(src => {
-    let img = new Image();
-    img.src = src;
-    khoAnhTrangTri.push(img);
+// --- KHO 2: THÚ (Xuất hiện ít) ---
+const nguonThu = ['assets/tho.png', 'assets/ga.png', 'assets/ga 2.png', 'assets/gau.png', 'assets/ho.png', 'assets/nai.png', 'assets/voi.png'];
+let khoAnhThu = [];
+nguonThu.forEach(src => {
+    let img = new Image(); img.src = src; khoAnhThu.push(img);
 });
 
 // 3. CẤU HÌNH THÔNG SỐ (Game Balance)
@@ -59,7 +56,7 @@ document.addEventListener('touchstart', function(e) {
     if (e.target === btnResume) return;
     const currentTime = new Date().getTime();
     const tapLength = currentTime - lastTapTime;
-    if (tapLength < 200 && tapLength > 0 && !gameOver) {
+    if (tapLength < 1000 && tapLength > 0 && !gameOver) {
         togglePause();
         e.preventDefault();
     }
@@ -135,39 +132,57 @@ function update(timestamp) {
         ctx.fillStyle = "#228B22"; ctx.fillRect(0,0,canvas.width, canvas.height);
     }
     
-    // --- THÊM CODE XỬ LÝ TRANG TRÍ (CỎ, THÚ) TẠI ĐÂY ---
-    // 1. Sinh ra vật trang trí ngẫu nhiên (Tỉ lệ xuất hiện nhiều hơn cây một chút)
-    if (Math.random() < 3.0 * deltaTime) { 
-        // Chọn ngẫu nhiên 1 tấm ảnh trong kho
-        let anhNgauNhien = khoAnhTrangTri[Math.floor(Math.random() * khoAnhTrangTri.length)];
+    // A. SINH CỎ (Tần suất CAO, kích thước NGẪU NHIÊN)
+    // Số 6.0 nghĩa là rất nhiều cỏ (bạn có thể tăng giảm số này)
+    if (Math.random() < 12.0 * deltaTime) { 
+        let imgCo = khoAnhCo[Math.floor(Math.random() * khoAnhCo.length)];
         
+        // Random kích thước từ 40px đến 90px
+        let sizeNgauNhien = 40 + Math.random() * 50; 
+
         danhSachTrangTri.push({
             x: Math.random() * canvas.width,
-            y: -100, // Xuất hiện từ trên cao
-            img: anhNgauNhien, // Lưu tấm ảnh đã chọn vào đối tượng này
-            width: 60, // Kích thước (có thể random to nhỏ nếu muốn)
-            height: 60
+            y: -100,
+            img: imgCo,
+            width: sizeNgauNhien,  // Chiều ngang ngẫu nhiên
+            height: sizeNgauNhien, // Chiều dọc bằng chiều ngang (giữ tỷ lệ vuông)
+            tocDo: GAME_SPEED, // Cỏ trôi theo nền
+            gocXoay: Math.random() * Math.PI * 2
         });
     }
 
-    // 2. Di chuyển và vẽ trang trí
-    for (let i = 0; i < danhSachTrangTri.length; i++) {
-        let vat = danhSachTrangTri[i];
+    // B. SINH THÚ (Tần suất THẤP)
+    // Số 0.5 nghĩa là thỉnh thoảng mới có 1 con
+    if (Math.random() < 1.0 * deltaTime) { 
+        let imgThu = khoAnhThu[Math.floor(Math.random() * khoAnhThu.length)];
         
-        // Di chuyển cùng tốc độ với nền (tạo cảm giác chúng nằm trên mặt đất)
-        vat.y += GAME_SPEED * deltaTime; 
-        
-        // Chỉ vẽ nếu ảnh đã tải xong
-        if (vat.img && vat.img.complete) {
-            ctx.drawImage(vat.img, vat.x, vat.y, vat.width, vat.height);
-        }
-        // LƯU Ý: KHÔNG CÓ CODE KIỂM TRA VA CHẠM Ở ĐÂY (Nên đâm vào không chết)
+        danhSachTrangTri.push({
+            x: Math.random() * canvas.width,
+            y: -100,
+            img: imgThu,
+            width: 60, // Kích thước thú cố định (hoặc random ít thôi)
+            height: 60,
+            tocDo: GAME_SPEED * 1.2, // MẸO: Cho thú chạy nhanh hơn nền một chút cho sinh động
+            gocXoay: Math.random() * Math.PI * 2
+        });
     }
 
-    // 3. Xóa bớt trang trí đã trôi khỏi màn hình (để nhẹ máy)
-    if (danhSachTrangTri.length > 0 && danhSachTrangTri[0].y > canvas.height) {
-        danhSachTrangTri.shift();
+    // C. VẼ TẤT CẢ (Chung một vòng lặp cho nhẹ máy)
+    for (let i = 0; i < danhSachTrangTri.length; i++) {
+        let vat = danhSachTrangTri[i];
+        vat.y += vat.tocDo * deltaTime; // Dùng tốc độ riêng của từng loại
+        
+        if (vat.img && vat.img.complete) {
+          ctx.save();
+          // 2. Dời điểm vẽ đến GIỮA TÂM của vật thể (để xoay quanh tâm, không phải xoay quanh góc)
+          ctx.translate(vat.x + vat.width / 2, vat.y + vat.height / 2);
+          // 3. Xoay bút vẽ theo góc đã random
+          ctx.rotate(vat.gocXoay);
+          ctx.drawImage(vat.img, -vat.width/2, -vat.height/2, vat.width, vat.height);
+          ctx.restore();
+        }
     }
+
     // --- B. XỬ LÝ BƯỚM VỖ CÁNH ---
     // Cập nhật vị trí bướm (Chỉ cho phép di chuyển TRÁI/PHẢI và LÊN/XUỐNG trong khung hình)
     buom.x += BUTTERFLY_SPEED * joystickData.x * deltaTime;
@@ -230,7 +245,7 @@ function update(timestamp) {
 function ketThucGame() {
     gameOver = true;
     setTimeout(() => {
-        alert("Ha Ha, thua rồi bồ tèo!");
+        alert("Rầm! Bạn đã đâm vào cây.");
         location.reload();
     }, 100);
 }
