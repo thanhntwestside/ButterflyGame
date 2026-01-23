@@ -244,10 +244,9 @@ function update(timestamp) {
 
 function ketThucGame() {
     gameOver = true;
-    setTimeout(() => {
-        alert("CHÚC MỪNG BẠN, THUA SẶC MÁU RỒI");
-        location.reload();
-    }, 100);
+    // Tìm cái bảng Game Over và hiện nó lên
+    const screen = document.getElementById('gameOverScreen');
+    screen.classList.remove('hidden');
 }
 
 requestAnimationFrame(update);
