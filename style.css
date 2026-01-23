@@ -63,3 +63,67 @@ body {
 #btnResume:active {
     background-color: #45a049; /* Đổi màu khi bấm */
 }
+/* Thiết kế khung Game Over (Giống khung Pause nhưng đẹp hơn) */
+#gameOverScreen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.9); /* Đen đậm hơn */
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    z-index: 200; /* Nằm trên cùng nhất */
+    width: 80%;
+    max-width: 350px;
+    border: 2px solid white;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5); /* Phát sáng viền */
+}
+
+/* --- HIỆU ỨNG CHỮ LẤP LÁNH (QUAN TRỌNG) --- */
+.sparkle-text {
+    font-size: 40px;
+    font-weight: bold;
+    margin: 0 0 20px 0;
+    
+    /* Tạo dải màu cầu vồng */
+    background: linear-gradient(
+        45deg, 
+        #ff0000, #ff7300, #fffb00, #48ff00, 
+        #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000
+    );
+    background-size: 400%; /* Kéo dãn màu ra */
+    
+    /* Cắt màu nền theo hình dáng chữ */
+    -webkit-background-clip: text;
+    background-clip: text;
+    
+    /* Làm chữ trong suốt để lộ màu nền bên dưới */
+    color: transparent;
+    
+    /* Chạy hiệu ứng động */
+    animation: rainbow-move 3s linear infinite;
+}
+
+/* Định nghĩa chuyển động của màu */
+@keyframes rainbow-move {
+    0% { background-position: 0%; }
+    100% { background-position: 400%; }
+}
+
+/* Nút Chơi Lại */
+.btn-restart {
+    background-color: #ff4757;
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    font-size: 18px;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 4px 0 #bd2130;
+}
+.btn-restart:active {
+    transform: translateY(4px);
+    box-shadow: none;
+}
