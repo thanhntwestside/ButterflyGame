@@ -32,9 +32,12 @@ nguonThu.forEach(src => {
 // 3. CẤU HÌNH THÔNG SỐ (Game Balance)
 // Tốc độ bay của game (Cảnh vật trôi xuống nhanh hay chậm)
 // 30% chiều cao màn hình mỗi giây
-const GAME_SPEED = canvas.height * 0.35; 
 const BUTTERFLY_SPEED = canvas.width * 0.6; // Tốc độ di chuyển trái phải của bướm
 
+let GAME_SPEED = canvas.height * 0.35; 
+let spawnRate = 1.5; // Tần suất xuất hiện cây (ban đầu là 1.5)
+let score = 0;     // Biến lưu điểm số
+let gameTime = 0;  // Biến lưu thời gian chơi
 let buom = { 
     x: canvas.width / 2, 
     y: canvas.height - 200, // Bướm bay cao hơn một chút cho thoáng
@@ -208,7 +211,7 @@ function update(timestamp) {
 
     // --- C. XỬ LÝ CÂY (Vật cản gắn chặt với mặt đất) ---
     // Tỉ lệ cây xuất hiện
-    if (Math.random() < 1.5 * deltaTime) { 
+    if (Math.random() < spawnRate * deltaTime) { 
         danhSachCay.push({
             x: Math.random() * canvas.width,
             y: -150, // Xuất hiện từ xa tít phía trên
@@ -237,14 +240,53 @@ function update(timestamp) {
     // Xóa cây đã trôi qua khỏi màn hình
     if (danhSachCay.length > 0 && danhSachCay[0].y > canvas.height) {
         danhSachCay.shift();
+        score++;
+        if (score > 0 && score % 50 === 0) {
+          GAME_SPEED += canvas.height*0.1;
+          spawnRate += 0.3;
+          console.log("tăng tốc độ")
+        }
     }
+    gameTime += deltaTime;
 
+    // 2. Thiết lập phông chữ
+    ctx.fillStyle = "white"; // Màu chữ trắng
+    ctx.font = "bold 24px Arial"; // Chữ đậm, to 24px
+    ctx.textAlign = "left"; // Canh lề trái
+    
+    // Tạo bóng đổ cho chữ để dễ nhìn trên nền rừng
+    ctx.shadowColor = "black";
+    ctx.shadowBlur = 4;
+    ctx.lineWidth = 3;
+    ctx.strokeText("Điểm: " + score, 20, 50); // Viền đen cho chữ Điểm
+    ctx.strokeText("Thời gian: " + Math.floor(gameTime) + "s", 20, 90); // Viền đen cho chữ Thời gian
+
+    ctx.shadowBlur = 0; // Tắt bóng đổ để vẽ chữ chính
+    ctx.fillText("Điểm: " + score, 20, 50); // Vẽ chữ Điểm (cách lề trái 20, lề trên 50)
+    
+    // Math.floor để làm tròn số giây (ví dụ 1.23s -> 1s)
+    ctx.fillText("Thời gian: " + Math.floor(gameTime) + "s", 20, 90);
+    
     requestAnimationFrame(update);
 }
 
 function ketThucGame() {
+    if (gameOver) return; // chặn gọi lại
     gameOver = true;
-    // Tìm cái bảng Game Over và hiện nó lên
+    const danhSachCauThoai = [
+      "CHÚC MỪNG BẠN, THUA CMNR", "SƯ PHỤ NHẦM ĐƯỜNG RỒI", "LÀM LẠI BẠN NHÉ", "BƯỚM ĐÃ GÃY CÁNH", "CỐ LÊN SẮP PHÁ ĐẢO RỒI"
+    ]
+    // 2. Chọn ngẫu nhiên 1 câu
+    // Math.random() ra số từ 0->1, nhân với độ dài danh sách để lấy index
+    const cauNgauNhien = danhSachCauThoai[Math.floor(Math.random() * danhSachCauThoai.length)];
+
+    // 3. Tìm thẻ chữ trong HTML và gán nội dung mới vào
+    const theLoiNhan = document.getElementById('loiNhanGameover');
+    if (theLoiNhan) {
+        theLoiNhan.innerText = cauNgauNhien;
+    }
+
+    // 4. Hiện bảng Game Over lên
     const screen = document.getElementById('gameOverScreen');
     screen.classList.remove('hidden');
 }
