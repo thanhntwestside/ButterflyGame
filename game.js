@@ -15,13 +15,6 @@ const imgBuom = new Image(); imgBuom.src = 'assets/buom.png';
 const imgCay = new Image(); imgCay.src = 'assets/cay.png';
 const imgNen = new Image(); imgNen.src = 'assets/nen.png';
 
-// --- KHO 1: CỎ (Xuất hiện nhiều) ---
-const nguonCo = ['assets/co 1.png', 'assets/co 2.png', 'assets/co 3.png'];
-let khoAnhCo = [];
-nguonCo.forEach(src => {
-    let img = new Image(); img.src = src; khoAnhCo.push(img);
-});
-
 // --- KHO 2: THÚ (Xuất hiện ít) ---
 const nguonThu = ['assets/tho.png', 'assets/ga.png', 'assets/ga 2.png', 'assets/gau.png', 'assets/ho.png', 'assets/nai.png', 'assets/voi.png'];
 let khoAnhThu = [];
@@ -32,7 +25,7 @@ nguonThu.forEach(src => {
 // 3. CẤU HÌNH THÔNG SỐ (Game Balance)
 // Tốc độ bay của game (Cảnh vật trôi xuống nhanh hay chậm)
 // 30% chiều cao màn hình mỗi giây
-const BUTTERFLY_SPEED = canvas.width * 0.6; // Tốc độ di chuyển trái phải của bướm
+const BUTTERFLY_SPEED = canvas.width * 1.0; // Tốc độ di chuyển trái phải của bướm
 
 let GAME_SPEED = canvas.height * 0.35; 
 let spawnRate = 1.5; // Tần suất xuất hiện cây (ban đầu là 1.5)
@@ -135,25 +128,6 @@ function update(timestamp) {
         ctx.fillStyle = "#228B22"; ctx.fillRect(0,0,canvas.width, canvas.height);
     }
     
-    // A. SINH CỎ (Tần suất CAO, kích thước NGẪU NHIÊN)
-    // Số 6.0 nghĩa là rất nhiều cỏ (bạn có thể tăng giảm số này)
-    if (Math.random() < 12.0 * deltaTime) { 
-        let imgCo = khoAnhCo[Math.floor(Math.random() * khoAnhCo.length)];
-        
-        // Random kích thước từ 40px đến 90px
-        let sizeNgauNhien = 40 + Math.random() * 50; 
-
-        danhSachTrangTri.push({
-            x: Math.random() * canvas.width,
-            y: -100,
-            img: imgCo,
-            width: sizeNgauNhien,  // Chiều ngang ngẫu nhiên
-            height: sizeNgauNhien, // Chiều dọc bằng chiều ngang (giữ tỷ lệ vuông)
-            tocDo: GAME_SPEED, // Cỏ trôi theo nền
-            gocXoay: Math.random() * Math.PI * 2
-        });
-    }
-
     // B. SINH THÚ (Tần suất THẤP)
     // Số 0.5 nghĩa là thỉnh thoảng mới có 1 con
     if (Math.random() < 1.0 * deltaTime) { 
