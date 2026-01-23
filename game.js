@@ -56,7 +56,7 @@ document.addEventListener('touchstart', function(e) {
     if (e.target === btnResume) return;
     const currentTime = new Date().getTime();
     const tapLength = currentTime - lastTapTime;
-    if (tapLength < 1000 && tapLength > 0 && !gameOver) {
+    if (tapLength < 100 && tapLength > 0 && !gameOver) {
         togglePause();
         e.preventDefault();
     }
@@ -245,7 +245,7 @@ function update(timestamp) {
 function ketThucGame() {
     gameOver = true;
     setTimeout(() => {
-        alert("Rầm! Bạn đã đâm vào cây.");
+        alert("CHÚC MỪNG BẠN, THUA SẶC MÁU RỒI");
         location.reload();
     }, 100);
 }
