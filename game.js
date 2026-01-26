@@ -18,6 +18,13 @@ nguonBuom.forEach(src => {
 });
 const imgCay = new Image(); imgCay.src = 'assets/cay.png';
 const imgNen = new Image(); imgNen.src = 'assets/nen.png';
+const audioNhacNen = new Audio('assets/nhac_nen.mp3');
+audioNhacNen.loop = true; // Cho phép lặp lại vô tận
+audioNhacNen.volume = 0.5; // Âm lượng vừa phải (0.0 đến 1.0)
+
+const audioIntro = new Audio('assets/intro.mp3');
+const audioBienHinh = new Audio('assets/bien_hinh.mp3');
+const audioChucMung = new Audio('assets/chuc_mung.mp3');
 
 // --- KHO 2: THÚ (Xuất hiện ít) ---
 const nguonThu = ['assets/tho.png', 'assets/ga.png', 'assets/ga 2.png', 'assets/gau.png', 'assets/ho.png', 'assets/nai.png', 'assets/voi.png'];
@@ -296,6 +303,8 @@ function update(timestamp) {
 function ketThucGame() {
     if (gameOver) return; // chặn gọi lại
     gameOver = true;
+    audioNhacNen.pause();
+    audioNhacNen.currentTime = 0; // Tua về đầu
     const danhSachCauThoai = [
       "CHÚC MỪNG BẠN, THUA CMNR", "SƯ PHỤ NHẦM ĐƯỜNG RỒI", "LÀM LẠI BẠN NHÉ", "BƯỚM ĐÃ GÃY CÁNH", "CỐ LÊN SẮP PHÁ ĐẢO RỒI"
     ]
@@ -313,37 +322,88 @@ function ketThucGame() {
     const screen = document.getElementById('gameOverScreen');
     screen.classList.remove('hidden');
 }
+// --- HÀM XỬ LÝ LEVEL UP NÂNG CẤP ---
 function kichHoatLevelUp() {
-    isLevelingUp = true; //bật trạng thái biến hình
+    isLevelingUp = true;
     const levelUpScreen = document.getElementById('levelUpScreen');
+    
+    // Tìm thẻ chữ trong bảng Level Up để sửa lời chúc
+    // (Lưu ý: Bạn cần chắc chắn trong HTML thẻ <p> chưa có ID, ta sẽ xử lý bên dưới hoặc dùng querySelector)
+    const theTieuDe = levelUpScreen.querySelector('h2'); // Dòng LEVEL UP
+    const theNoiDung = levelUpScreen.querySelector('p'); // Dòng Tốc độ tăng...
+
+    // --- LOGIC KIỂM TRA MỐC ĐIỂM (100, 200, 300...) ---
+    if (score % 100 === 0) { 
+        // TRƯỜNG HỢP ĐẶC BIỆT (Mỗi 100 điểm)
+        
+        // 1. Phát nhạc hoành tráng
+        audioChucMung.currentTime = 0; // Tua về đầu
+        audioChucMung.play();
+
+        // 2. Đổi lời chúc theo từng mốc
+        theTieuDe.innerText = "KỶ LỤC MỚI!";
+        theTieuDe.style.textShadow = "0 0 20px #ff00de"; // Đổi màu neon sang tím hồng
+        
+        if (score === 100) {
+            theNoiDung.innerText = "BẠN ĐÃ ĐẠT CẢNH GIỚI CAO THỦ!";
+        } else if (score === 200) {
+            theNoiDung.innerText = "THẦN SẦU! BÀN TAY VÀNG LÀ ĐÂY!";
+        } else if (score === 300) {
+            theNoiDung.innerText = "KHÔNG THỂ TIN NỔI! BẠN LÀ ROBOT À?";
+        } else {
+            theNoiDung.innerText = "BẤT TỬ RỒI! TIẾP TỤC NÀO!";
+        }
+
+    } else {
+        // TRƯỜNG HỢP BÌNH THƯỜNG (50, 150, 250...)
+        
+        // 1. Phát nhạc biến hình thường
+        audioBienHinh.currentTime = 0;
+        audioBienHinh.play();
+
+        // 2. Nội dung mặc định
+        theTieuDe.innerText = "LEVEL UP!";
+        theTieuDe.style.textShadow = "0 0 10px blue"; // Màu xanh cũ
+        theNoiDung.innerText = "TỐC ĐỘ GAME TĂNG LÊN";
+    }
+
+    // --- CÁC LOGIC CŨ (GIỮ NGUYÊN) ---
     levelUpScreen.classList.remove('hidden');
-    if (currentBuomIndex < khoAnhBuom.length - 1) {  //đổi sang bướm tiếp theo
+    
+    if (currentBuomIndex < khoAnhBuom.length - 1) {
         currentBuomIndex++;
     }
-    const MAX_SPEED = canvas.height*1.2; //tăng tốc độ game
-    if (GAME_SPEED < MAX_SPEED) {
-        GAME_SPEED += canvas.height*0.1;
-    }
-    const MAX_SPAWN_RATE = 5.0;     //tăng số lượng cây
-    if (spawnRate < MAX_SPAWN_RATE) {
-        spawnRate += 0.2;
-    }
-    setTimeout(() => {          //thông báo biến hình
+    
+    const MAX_SPEED = canvas.height * 1.2;
+    if (GAME_SPEED < MAX_SPEED) GAME_SPEED += canvas.height * 0.1;
+    
+    const MAX_SPAWN_RATE = 5.0;
+    if (spawnRate < MAX_SPAWN_RATE) spawnRate += 0.2;
+
+    setTimeout(() => {
         isLevelingUp = false;
-        levelUpScreen.classList.add('hidden')
+        levelUpScreen.classList.add('hidden');
     }, 3000);
 }
 // --- XỬ LÝ NÚT BẮT ĐẦU GAME ---
-btnStart.addEventListener('click', function() {
+btnStart.addEventListener('click', batDauGame);
+btnStart.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    batDauGame();
+});
+
+function batDauGame() {
     // 1. Ẩn màn hình chào mừng
     startScreen.classList.add('hidden');
     
-    // 2. Reset thời gian để tránh bị giật khung hình đầu tiên
-    lastTime = performance.now();
+    // 2. PHÁT NHẠC (Chỉ được phép chạy khi người dùng đã bấm nút)
+    audioIntro.play();    // Chạy tiếng intro
+    audioNhacNen.play();  // Chạy nhạc nền
     
-    // 3. Chính thức chạy vòng lặp game
+    // 3. Reset thời gian và chạy game
+    lastTime = performance.now();
     requestAnimationFrame(update);
-});
+}
 
 // Hỗ trợ cảm ứng (để bấm nhạy hơn trên điện thoại)
 btnStart.addEventListener('touchstart', function(e) {
