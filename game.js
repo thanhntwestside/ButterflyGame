@@ -144,7 +144,7 @@ function update(timestamp) {
             let h = 50 * scaleEffect;
             
             // Vẽ bướm ngay giữa vị trí hiện tại
-            ctx.drawImage(imgBuomHienTai, buom.x - w/2 + 25, buom.y - h/2 + 25, w, h);
+            ctx.drawImage(imgBuomHienTai, buom.x - w/2, buom.y - h/2, w, h);
         }
 
         // Dừng tại đây, không chạy logic bên dưới để Game Tạm Dừng
@@ -333,4 +333,22 @@ function kichHoatLevelUp() {
         levelUpScreen.classList.add('hidden')
     }, 3000);
 }
-requestAnimationFrame(update);
+// --- XỬ LÝ NÚT BẮT ĐẦU GAME ---
+btnStart.addEventListener('click', function() {
+    // 1. Ẩn màn hình chào mừng
+    startScreen.classList.add('hidden');
+    
+    // 2. Reset thời gian để tránh bị giật khung hình đầu tiên
+    lastTime = performance.now();
+    
+    // 3. Chính thức chạy vòng lặp game
+    requestAnimationFrame(update);
+});
+
+// Hỗ trợ cảm ứng (để bấm nhạy hơn trên điện thoại)
+btnStart.addEventListener('touchstart', function(e) {
+    e.preventDefault(); // Chặn sự kiện click bị gọi đè
+    startScreen.classList.add('hidden');
+    lastTime = performance.now();
+    requestAnimationFrame(update);
+});
