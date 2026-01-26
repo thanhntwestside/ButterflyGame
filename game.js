@@ -11,7 +11,11 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 // 2. TẢI HÌNH ẢNH
-const imgBuom = new Image(); imgBuom.src = 'assets/buom.png';
+const nguonBuom = ['assets/buom1.png', 'assets/buom2.png', 'assets/buom3.png', 'assets/buom4.png'];
+let khoAnhBuom = [];
+nguonBuom.forEach(src => {
+  let img = new Image(); img.src = src; khoAnhBuom.push(img);
+});
 const imgCay = new Image(); imgCay.src = 'assets/cay.png';
 const imgNen = new Image(); imgNen.src = 'assets/nen.png';
 
@@ -25,7 +29,7 @@ nguonThu.forEach(src => {
 // 3. CẤU HÌNH THÔNG SỐ (Game Balance)
 // Tốc độ bay của game (Cảnh vật trôi xuống nhanh hay chậm)
 // 30% chiều cao màn hình mỗi giây
-const BUTTERFLY_SPEED = canvas.width * 1.0; // Tốc độ di chuyển trái phải của bướm
+const BUTTERFLY_SPEED = canvas.width * 0.6; // Tốc độ di chuyển trái phải của bướm
 
 let GAME_SPEED = canvas.height * 0.35; 
 let spawnRate = 1.5; // Tần suất xuất hiện cây (ban đầu là 1.5)
@@ -46,13 +50,16 @@ let gameOver = false;
 let isPaused = false;
 let lastTime = 0;
 let lastTapTime = 0;
+let isLevelingUp = false; //kiểm tra có đang biến hình ko
+let currentBuomIndex = 0; //đang dùng bướm số mấy (0 là buom1)
+const levelUpScreen = document.getElementById('levelUpScreen'); //lấy thẻ trong HTML
 
 // --- LOGIC NHẤN ĐÚP (DOUBLE TAP) ---
 document.addEventListener('touchstart', function(e) {
     if (e.target === btnResume) return;
     const currentTime = new Date().getTime();
     const tapLength = currentTime - lastTapTime;
-    if (tapLength < 800 && tapLength > 0 && !gameOver) {
+    if (tapLength < 200 && tapLength > 0 && !gameOver) {
         togglePause();
         e.preventDefault();
     }
@@ -105,12 +112,45 @@ function update(timestamp) {
     const deltaTime = (timestamp - lastTime) / 1000; 
     lastTime = timestamp;
 
-    if (deltaTime > 0.1) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // --- TRƯỜNG HỢP ĐẶC BIỆT: ĐANG BIẾN HÌNH (LEVEL UP) ---
+    if (isLevelingUp) {
+        // 1. Vẫn vẽ nền (nhưng đứng im, không cộng bgY)
+        if (imgNen.complete) {
+            ctx.drawImage(imgNen, 0, bgY, canvas.width, canvas.height);
+            ctx.drawImage(imgNen, 0, bgY - canvas.height, canvas.width, canvas.height);
+        }
+        
+        // 2. Vẽ cây và thú (đứng im)
+        // Để đơn giản, ta chỉ cần vẽ lại những gì đang có mà không thay đổi vị trí
+        danhSachCay.forEach(c => ctx.drawImage(imgCay, c.x, c.y, c.width, c.height));
+        danhSachTrangTri.forEach(vat => {
+             ctx.save();
+             ctx.translate(vat.x + vat.width/2, vat.y + vat.height/2);
+             ctx.rotate(vat.gocXoay);
+             ctx.drawImage(vat.img, -vat.width/2, -vat.height/2, vat.width, vat.height);
+             ctx.restore();
+        });
+
+        // 3. HIỆU ỨNG BIẾN HÌNH 
+        // Lấy hình con bướm MỚI
+        let imgBuomHienTai = khoAnhBuom[currentBuomIndex];
+        if (imgBuomHienTai && imgBuomHienTai.complete) {
+            // Tạo hiệu ứng phóng to thu nhỏ liên tục (Sin wave)
+            // Tốc độ nhấp nháy nhanh (nhân 20)
+            let scaleEffect = 1 + 0.5 * Math.sin(timestamp / 50); 
+            
+            let w = 50 * scaleEffect;
+            let h = 50 * scaleEffect;
+            
+            // Vẽ bướm ngay giữa vị trí hiện tại
+            ctx.drawImage(imgBuomHienTai, buom.x - w/2 + 25, buom.y - h/2 + 25, w, h);
+        }
+
+        // Dừng tại đây, không chạy logic bên dưới để Game Tạm Dừng
         requestAnimationFrame(update);
         return;
-    }
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
 
     // --- A. XỬ LÝ HÌNH NỀN TRÔI (Tạo cảm giác bay tới) ---
     // Di chuyển vị trí nền xuống dưới
@@ -130,7 +170,7 @@ function update(timestamp) {
     
     // B. SINH THÚ (Tần suất THẤP)
     // Số 0.5 nghĩa là thỉnh thoảng mới có 1 con
-    if (Math.random() < 1.0 * deltaTime) { 
+    if (Math.random() < 1.5 * deltaTime) { 
         let imgThu = khoAnhThu[Math.floor(Math.random() * khoAnhThu.length)];
         
         danhSachTrangTri.push({
@@ -139,7 +179,8 @@ function update(timestamp) {
             img: imgThu,
             width: 60, // Kích thước thú cố định (hoặc random ít thôi)
             height: 60,
-            tocDo: GAME_SPEED * 1.2, // MẸO: Cho thú chạy nhanh hơn nền một chút cho sinh động
+            tocDoTroi: GAME_SPEED,
+            tocDoChay: canvas.width*0.2,
             gocXoay: Math.random() * Math.PI * 2
         });
     }
@@ -147,8 +188,8 @@ function update(timestamp) {
     // C. VẼ TẤT CẢ (Chung một vòng lặp cho nhẹ máy)
     for (let i = 0; i < danhSachTrangTri.length; i++) {
         let vat = danhSachTrangTri[i];
-        vat.y += vat.tocDo * deltaTime; // Dùng tốc độ riêng của từng loại
-        
+        vat.y += (GAME_SPEED + Math.sin(vat.gocXoay) * vat.tocDoChay) * deltaTime; //di chuyển theo hướng con vật xuống dưới
+        vat.x += (Math.cos(vat.gocXoay) * vat.tocDoChay) * deltaTime; //di chuyển theo hướng con vật ngang
         if (vat.img && vat.img.complete) {
           ctx.save();
           // 2. Dời điểm vẽ đến GIỮA TÂM của vật thể (để xoay quanh tâm, không phải xoay quanh góc)
@@ -157,6 +198,12 @@ function update(timestamp) {
           ctx.rotate(vat.gocXoay);
           ctx.drawImage(vat.img, -vat.width/2, -vat.height/2, vat.width, vat.height);
           ctx.restore();
+        }
+    }
+    if (danhSachTrangTri.length > 0) {
+        let vatDau = danhSachTrangTri[0];
+        if (vatDau.y > canvas.height + 100 || vatDau.x < -200 || vatDau.x > canvas.width + 200) {
+            danhSachTrangTri.shift();
         }
     }
 
@@ -176,11 +223,15 @@ function update(timestamp) {
     // Scale chạy từ 0.6 đến 1.0 (Lúc nhỏ nhất là cụp cánh, lúc 1 là xòe cánh)
     let wingScale = 0.8 + 0.2 * Math.sin(buom.flapTimer); 
     
-    // Vẽ bướm với chiều rộng thay đổi
-    if (imgBuom.complete) {
-        let currentWidth = 50 * wingScale; // Chiều rộng lúc vỗ
-        let offset = (50 - currentWidth) / 2; // Để giữ bướm ở giữa tâm
-        ctx.drawImage(imgBuom, buom.x - 25 + offset, buom.y - 25, currentWidth, 50);
+   // Lấy hình con bướm dựa theo LEVEL hiện tại
+    let imgBuomDangDung = khoAnhBuom[currentBuomIndex]; 
+
+    // Vẽ bướm
+    if (imgBuomDangDung && imgBuomDangDung.complete) {
+        let currentWidth = 50 * wingScale; 
+        let offset = (50 - currentWidth) / 2; 
+        // Vẽ imgBuomDangDung thay vì imgBuom
+        ctx.drawImage(imgBuomDangDung, buom.x - 25 + offset, buom.y - 25, currentWidth, 50);
     }
 
     // --- C. XỬ LÝ CÂY (Vật cản gắn chặt với mặt đất) ---
@@ -216,9 +267,7 @@ function update(timestamp) {
         danhSachCay.shift();
         score++;
         if (score > 0 && score % 50 === 0) {
-          GAME_SPEED += canvas.height*0.1;
-          spawnRate += 0.3;
-          console.log("tăng tốc độ")
+          kichHoatLevelUp();
         }
     }
     gameTime += deltaTime;
@@ -240,7 +289,7 @@ function update(timestamp) {
     
     // Math.floor để làm tròn số giây (ví dụ 1.23s -> 1s)
     ctx.fillText("Thời gian: " + Math.floor(gameTime) + "s", 20, 90);
-    
+
     requestAnimationFrame(update);
 }
 
@@ -264,5 +313,24 @@ function ketThucGame() {
     const screen = document.getElementById('gameOverScreen');
     screen.classList.remove('hidden');
 }
-
+function kichHoatLevelUp() {
+    isLevelingUp = true; //bật trạng thái biến hình
+    const levelUpScreen = document.getElementById('levelUpScreen');
+    levelUpScreen.classList.remove('hidden');
+    if (currentBuomIndex < khoAnhBuom.length - 1) {  //đổi sang bướm tiếp theo
+        currentBuomIndex++;
+    }
+    const MAX_SPEED = canvas.height*1.2; //tăng tốc độ game
+    if (GAME_SPEED < MAX_SPEED) {
+        GAME_SPEED += canvas.height*0.1;
+    }
+    const MAX_SPAWN_RATE = 5.0;     //tăng số lượng cây
+    if (spawnRate < MAX_SPAWN_RATE) {
+        spawnRate += 0.2;
+    }
+    setTimeout(() => {          //thông báo biến hình
+        isLevelingUp = false;
+        levelUpScreen.classList.add('hidden')
+    }, 3000);
+}
 requestAnimationFrame(update);
