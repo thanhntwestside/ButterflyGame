@@ -145,3 +145,18 @@ body {
   from {transform: translate(-50%,-50%) scale(1);}
   to {transform: translate(-50%,-50%) scale(1.1);}
 }
+#startScreen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.9); /* Nền đen đậm */
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    z-index: 300; /* Cao nhất để đè lên mọi thứ */
+    width: 85%;
+    max-width: 350px;
+    border: 2px solid #00ffea; /* Viền xanh neon cho khác biệt chút */
+    box-shadow: 0 0 20px rgba(0, 255, 234, 0.5);
+}
