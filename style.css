@@ -127,3 +127,21 @@ body {
     transform: translateY(4px);
     box-shadow: none;
 }
+#levelUpScreen {
+  position:absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 20px 40px;
+  border-radius: 15px;
+  text-align: center;
+  z-index: 150;
+  border: 2px solid #00ffea;
+  box-shadow: 0 0 20px #00ffea;
+  animation: pulse 0.5s infinite alternate;
+}
+@keyframes pulse {
+  from {transform: translate(-50%,-50%) scale(1);}
+  to {transform: translate(-50%,-50%) scale(1.1);}
+}
