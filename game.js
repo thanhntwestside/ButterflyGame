@@ -21,10 +21,15 @@ const imgNen = new Image(); imgNen.src = 'assets/nen.png';
 const audioNhacNen = new Audio('assets/nhac_nen.mp3');
 audioNhacNen.loop = true; // Cho phép lặp lại vô tận
 audioNhacNen.volume = 0.5; // Âm lượng vừa phải (0.0 đến 1.0)
-
+// Xử lý lỗi nhạc nền bị dừng đột ngột trên App
+audioNhacNen.addEventListener('ended', function() {
+    this.currentTime = 0;
+    this.play();
+}, false);
 const audioIntro = new Audio('assets/intro.mp3');
 const audioBienHinh = new Audio('assets/bien_hinh.mp3');
 const audioChucMung = new Audio('assets/chuc_mung.mp3');
+const audioGameOver = new Audio('assets/game_over.mp3'); // Thêm dòng này
 
 // --- KHO 2: THÚ (Xuất hiện ít) ---
 const nguonThu = ['assets/tho.png', 'assets/ga.png', 'assets/ga 2.png', 'assets/gau.png', 'assets/ho.png', 'assets/nai.png', 'assets/voi.png'];
@@ -95,7 +100,10 @@ var manager = nipplejs.create({
     mode: 'dynamic',
     color: 'white',
     size: 150,
-    threshold: 0.1
+    threshold: 0.1,
+    multitouch: false, // Chặn đa điểm trên vùng Joystick để tránh nhiễu
+    maxNumberOfNipples: 1,
+    dataOnly: false // Đảm bảo luôn vẽ Joystick ra màn hình
 });
 
 manager.on('move', function (evt, data) {
@@ -305,6 +313,8 @@ function ketThucGame() {
     gameOver = true;
     audioNhacNen.pause();
     audioNhacNen.currentTime = 0; // Tua về đầu
+    audioGameOver.currentTime = 0;
+    audioGameOver.play().catch(e => console.log("Lỗi phát nhạc GameOver"));
     const danhSachCauThoai = [
       "CHÚC MỪNG BẠN, THUA CMNR", "SƯ PHỤ NHẦM ĐƯỜNG RỒI", "LÀM LẠI BẠN NHÉ", "BƯỚM ĐÃ GÃY CÁNH", "CỐ LÊN SẮP PHÁ ĐẢO RỒI"
     ]
@@ -396,9 +406,17 @@ function batDauGame() {
     // 1. Ẩn màn hình chào mừng
     startScreen.classList.add('hidden');
     
-    // 2. PHÁT NHẠC (Chỉ được phép chạy khi người dùng đã bấm nút)
-    audioIntro.play();    // Chạy tiếng intro
-    audioNhacNen.play();  // Chạy nhạc nền
+    // Phát Intro
+    audioIntro.play().catch(e => console.log("Nhạc chờ tương tác"));
+    
+    // Phát nhạc nền với cơ chế buộc chạy (Force Play)
+    const playPromise = audioNhacNen.play();
+    if (playPromise !== undefined) {
+        playPromise.catch(error => {
+            // Nếu App chặn, thử phát lại khi người dùng chạm màn hình lần đầu
+            document.addEventListener('touchstart', () => { audioNhacNen.play(); }, {once: true});
+        });
+    }
     
     // 3. Reset thời gian và chạy game
     lastTime = performance.now();
@@ -412,3 +430,15 @@ btnStart.addEventListener('touchstart', function(e) {
     lastTime = performance.now();
     requestAnimationFrame(update);
 });
+// Chặn menu chuột phải và các hành vi mặc định khi chạm lâu
+window.addEventListener('contextmenu', function (e) { 
+    e.preventDefault(); 
+}, false);
+
+// Đảm bảo các sự kiện cảm ứng không bị truyền ra ngoài App
+document.addEventListener('touchstart', function(e) {
+    if (e.target.id === 'zone_joystick' || e.target.closest('#zone_joystick')) {
+        // Không gọi preventDefault ở đây để tránh chặn luôn nút bấm, 
+        // nhưng đảm bảo sự kiện được xử lý tại chỗ.
+    }
+}, { passive: false });
